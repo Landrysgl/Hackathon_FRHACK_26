@@ -1,0 +1,1 @@
+pip install  pandas requests pillow tqdm boto3 dash
