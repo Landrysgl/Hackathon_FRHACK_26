@@ -1,1 +1,1 @@
-pip install  pandas requests pillow tqdm boto3 dash
+pip install  pandas requests pillow tqdm boto3 dash kaleido

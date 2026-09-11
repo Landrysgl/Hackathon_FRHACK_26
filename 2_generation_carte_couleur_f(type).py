@@ -179,27 +179,27 @@ print("Sauvegarde de la carte...")
 # 1. Image PNG
 # ------------------------------------------------------------
 
-try:
+# try:
 
-    fig.write_image(
-        PNG_FILE,
-        width=1600,
-        height=900,
-        scale=2
-    )
+#     fig.write_image(
+#         PNG_FILE,
+#         width=1600,
+#         height=900,
+#         scale=2
+#     )
 
-    print("Image PNG sauvegardée :")
-    print(f"  {PNG_FILE}")
+#     print("Image PNG sauvegardée :")
+#     print(f"  {PNG_FILE}")
 
-except Exception as e:
+# except Exception as e:
 
-    print()
-    print("Impossible de sauvegarder le PNG.")
-    print("Installe probablement Kaleido avec :")
-    print()
-    print("    pip install kaleido")
-    print()
-    print(f"Détail : {e}")
+#     print()
+#     print("Impossible de sauvegarder le PNG.")
+#     print("Installe probablement Kaleido avec :")
+#     print()
+#     print("    pip install kaleido")
+#     print()
+#     print(f"Détail : {e}")
 
 
 # ------------------------------------------------------------
