@@ -17,7 +17,7 @@ dossier_labels_manuels = "data/annotations_validation"
 
 chemin_modele = "runs/detect/runs/detect/antennes/weights/best.pt"
 
-seuil_confiance = 0.05
+seuil_confiance = 0.005
 
 seuil_iou = 0.50
 
