@@ -1,0 +1,85 @@
+TPO_ID;TPO_LB
+58;DAUPHIN TELECOM
+60;REUNION NUMERIQUE
+45;RATP
+46;Titulaire programme Radio/TV
+47;Office des Postes et Telecom
+36;Altitude Telecom
+37;Antalis
+38;One Cast
+39;Gendarmerie
+40;Onati
+41;France Caraibes Mobiles
+42;FREE-MOBILE
+43;Lagardère Active Média
+44;Outremer Telecom
+1;ANFR
+2;Association
+3;Aviation Civile
+4;BOUYGUES
+5;CCI,Ch Metiers,Port Aut,Aérop
+6;Conseil Départemental
+7;Conseil Régional
+8;Coopérative Agricole, Vinicole
+9;Copropriété, Syndic, SCI
+10;CROSS
+11;DDE
+13;EDF ou GDF
+14;Etablissement de soins
+15;Ets public , Minist, Synd mixt
+16;ORANGE Services Fixes
+17;Syndicat des eaux, Adduction
+18;Intérieur
+19;La Poste
+20;Météo
+21;ORANGE
+22;Particulier
+23;Phares et balises
+24;SNCF Réseau
+25;RTE
+26;SDIS, secours, incendie
+27;SFR
+28;Société HLM
+29;Société Privée
+30;Sociétés d'Autoroutes
+31;Sté Réunionn. de Radiotéléph.
+32;TDF
+33;Towercast
+34;Commune, communauté de commune
+35;Voies navigables de France
+49;BOLLORE
+48;9 CEGETEL
+50;COMPLETEL
+51;DIGICEL
+52;EUTELSAT
+53;EXPERTMEDIA
+54;MEDIASERV
+55;BELGACOM
+59;Itas Tim
+56;AIRBUS
+57;GUYANE NUMERIQUE
+62;SNCF
+64;Pacific Mobile Telecom
+63;VITI
+61;GLOBECAST
+69;ZEOP
+80;REGIE HTES PYRENEES HAUT DEBIT
+76;TOWEO
+79;ONEWEB
+75;ON TOWER FRANCE
+82;SYADEN
+68;CELLNEX
+73;PHOENIX FRANCE INFRASTRUCTURES
+81;VALOCIME
+70;DGEN
+72;HIVORY
+78;NEXT TOWER
+67;Service des Postes et Telecom
+65;ATC FRANCE
+71;HUBONE
+74;TOTEM
+77;Electricité De Tahiti
+66;Telco OI
+87;MADIACOM
+85;Société des Grands Projets
+12;Autres
