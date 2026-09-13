@@ -1,0 +1,11 @@
+{
+  "visible_supports_used": 175,
+  "mean_m": 13.545344211626109,
+  "median_m": 11.726167804377036,
+  "p95_m": 30.71289431977816,
+  "p97_5_m": 40.024077302145734,
+  "p99_m": 47.16002991084162,
+  "max_m": 50.49460631313669,
+  "candidate_distance_threshold_m": 150.0,
+  "interpretation": "Le seuil 150 m est volontairement conservateur par rapport à la dispersion observée sur les supports visibles annotés."
+}

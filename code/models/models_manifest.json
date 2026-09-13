@@ -1,0 +1,24 @@
+{
+  "models": [
+    {
+      "file": "pyl_poil_level1_weak_baseline.pt",
+      "role": "niveau1_weak_baseline",
+      "size_bytes": 6332394,
+      "sha256": "68984092d704cc2bad92d669964f6dc095871466e2c47f619c19f24fe3c0c0cd",
+      "source_run": "baseline_weak",
+      "architecture": "YOLOv8n",
+      "imgsz": 1024,
+      "seed": 42
+    },
+    {
+      "file": "pyl_poil_final_yolov8n.pt",
+      "role": "final",
+      "size_bytes": 6332778,
+      "sha256": "bc73684a7b94fa57470c7c7e1c7c49eb96b29cebc589154f22f24083bf4c9ea7",
+      "source_run": "niveau2_renforce_coco_sans_rotation",
+      "architecture": "YOLOv8n",
+      "imgsz": 1024,
+      "seed": 42
+    }
+  ]
+}

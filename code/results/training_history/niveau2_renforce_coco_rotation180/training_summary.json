@@ -1,0 +1,12 @@
+{
+  "experiment": "niveau2_renforce_coco_rotation180",
+  "initial_weights": "historical/baseline_yolo/yolov8n.pt",
+  "dataset": "historical/baseline_yolo/data/dataset_niveau2_renforce/dataset.yaml",
+  "epochs_max": 50,
+  "imgsz": 1024,
+  "batch": 8,
+  "patience": 15,
+  "seed": 42,
+  "degrees": 180.0,
+  "best_weights": "historical/baseline_yolo/runs/niveau2_renforce_coco_rotation180/weights/best.pt"
+}

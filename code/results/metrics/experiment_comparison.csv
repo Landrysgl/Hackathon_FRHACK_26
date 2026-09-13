@@ -1,0 +1,10 @@
+experiment,evaluation_split,images_used,visible,non_visible,map50,map50_95,TP_at_reported_conf,FP_at_reported_conf,FN_at_reported_conf,reported_conf
+niveau1_baseline,initial_manual_test_20,13,10,3,0.0126144578313253,0.0016699877242831666,0,0,10,0.05
+niveau2_compare_mono,initial_manual_test_20,13,10,3,0.00025915080527086386,6.215542458715404e-05,0,5,10,0.05
+niveau2_final_conf003,initial_manual_test_20,13,10,3,0.016101822219319446,0.0021611223928721156,0,0,10,0.03
+niveau2_finetune,initial_manual_test_20,13,10,3,0.011717854217854219,0.0019031259975712243,0,0,10,0.05
+niveau2_hardneg,initial_manual_test_20,13,10,3,0.011262017832913356,0.0018497097846987096,0,0,10,0.05
+niveau2_humain,initial_manual_test_20,13,10,3,0.0025366395842113918,0.0006976415494575537,0,0,10,0.05
+niveau2_renforce,initial_manual_test_20,13,10,3,0.00015887218643124154,6.354887457249661e-05,0,28,10,0.05
+niveau2_rotation180,initial_manual_test_20,13,10,3,0.016101822219319446,0.0021611223928721156,0,0,10,0.05
+final_coco_no_rotation,fresh_holdout_25,23,21,2,0.2494986163552126,0.11381873274058876,13,111,8,0.05

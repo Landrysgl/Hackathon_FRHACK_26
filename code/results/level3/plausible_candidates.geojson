@@ -1,0 +1,491 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.132132439458019,
+          48.797047563074095
+        ]
+      },
+      "properties": {
+        "candidate_id": "D001",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.6965839266777039,
+        "distance_anfr_m": 164.09689260582866,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.13241558176378,
+          48.80093063555818
+        ]
+      },
+      "properties": {
+        "candidate_id": "D002",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.5302276015281677,
+        "distance_anfr_m": 181.0803902152361,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.1259929297036706,
+          48.80130595727149
+        ]
+      },
+      "properties": {
+        "candidate_id": "D003",
+        "zone_id": "dense",
+        "support_type": "mat",
+        "confidence": 0.4892931282520294,
+        "distance_anfr_m": 155.61820539284508,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.131190119034727,
+          48.79448918835363
+        ]
+      },
+      "properties": {
+        "candidate_id": "D004",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.4588986039161682,
+        "distance_anfr_m": 196.73886108631288,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.133617961681012,
+          48.801750765639895
+        ]
+      },
+      "properties": {
+        "candidate_id": "D005",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.4181185960769653,
+        "distance_anfr_m": 150.54898563318685,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.130660266357154,
+          48.79944540032697
+        ]
+      },
+      "properties": {
+        "candidate_id": "D006",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.3996590375900268,
+        "distance_anfr_m": 162.2627252584222,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.130313756515534,
+          48.79434290064165
+        ]
+      },
+      "properties": {
+        "candidate_id": "D007",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.3208507001399994,
+        "distance_anfr_m": 250.7318529428723,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.1268531584610173,
+          48.79667665845903
+        ]
+      },
+      "properties": {
+        "candidate_id": "D008",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.3012443780899048,
+        "distance_anfr_m": 163.54170221472856,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.129470056406717,
+          48.79563869845864
+        ]
+      },
+      "properties": {
+        "candidate_id": "D009",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.288211315870285,
+        "distance_anfr_m": 210.57626105497283,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.127876752056181,
+          48.793495582865376
+        ]
+      },
+      "properties": {
+        "candidate_id": "D010",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.2228470146656036,
+        "distance_anfr_m": 187.96744601675408,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.1244978450613416,
+          48.79628207376935
+        ]
+      },
+      "properties": {
+        "candidate_id": "D011",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.186827078461647,
+        "distance_anfr_m": 160.05083958363284,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.136657640203339,
+          48.80110139859101
+        ]
+      },
+      "properties": {
+        "candidate_id": "D012",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.1744061559438705,
+        "distance_anfr_m": 203.1628283439199,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.135741119896011,
+          48.801174397170136
+        ]
+      },
+      "properties": {
+        "candidate_id": "D013",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.1673001945018768,
+        "distance_anfr_m": 161.47001544733612,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.126590162988577,
+          48.793409557121805
+        ]
+      },
+      "properties": {
+        "candidate_id": "D014",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.1408622860908508,
+        "distance_anfr_m": 150.12088522787587,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.1321479426842416,
+          48.79828550789698
+        ]
+      },
+      "properties": {
+        "candidate_id": "D015",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.13211190700531,
+        "distance_anfr_m": 158.27490723981802,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.132072695376337,
+          48.799297189462486
+        ]
+      },
+      "properties": {
+        "candidate_id": "D016",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.1184626072645187,
+        "distance_anfr_m": 190.48433756591265,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.130344159249944,
+          48.79501674315363
+        ]
+      },
+      "properties": {
+        "candidate_id": "D017",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.111618585884571,
+        "distance_anfr_m": 227.0058443802903,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.1297095221416384,
+          48.79471130812392
+        ]
+      },
+      "properties": {
+        "candidate_id": "D018",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.0936203524470329,
+        "distance_anfr_m": 263.5890709569139,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.1275158115895465,
+          48.79591276505912
+        ]
+      },
+      "properties": {
+        "candidate_id": "D019",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.0845192670822143,
+        "distance_anfr_m": 167.66731308237848,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.1284172322339145,
+          48.794135717737554
+        ]
+      },
+      "properties": {
+        "candidate_id": "D020",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.0836609378457069,
+        "distance_anfr_m": 181.0778605247317,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.131988844666921,
+          48.79451243636442
+        ]
+      },
+      "properties": {
+        "candidate_id": "D022",
+        "zone_id": "dense",
+        "support_type": "batiment",
+        "confidence": 0.0511295869946479,
+        "distance_anfr_m": 152.16026833298497,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.8484947507568,
+          48.47930723225489
+        ]
+      },
+      "properties": {
+        "candidate_id": "I002",
+        "zone_id": "intermediaire",
+        "support_type": "batiment",
+        "confidence": 0.08411256223917,
+        "distance_anfr_m": 278.59949553745327,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.850801856999169,
+          48.47662141166682
+        ]
+      },
+      "properties": {
+        "candidate_id": "I003",
+        "zone_id": "intermediaire",
+        "support_type": "indetermine",
+        "confidence": 0.0687950178980827,
+        "distance_anfr_m": 328.1733986398953,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.5069968511124898,
+          49.0760137722628
+        ]
+      },
+      "properties": {
+        "candidate_id": "P003",
+        "zone_id": "peu_dense",
+        "support_type": "batiment",
+        "confidence": 0.2963613271713257,
+        "distance_anfr_m": 474.565231474783,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.5129424883161846,
+          49.070094555785765
+        ]
+      },
+      "properties": {
+        "candidate_id": "P007",
+        "zone_id": "peu_dense",
+        "support_type": "indetermine",
+        "confidence": 0.1983228623867035,
+        "distance_anfr_m": 483.7563386555113,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.5142303556240222,
+          49.07112679579878
+        ]
+      },
+      "properties": {
+        "candidate_id": "P010",
+        "zone_id": "peu_dense",
+        "support_type": "indetermine",
+        "confidence": 0.1383712589740753,
+        "distance_anfr_m": 378.7020067002115,
+        "status": "plausible"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.5064684897015468,
+          49.07360185515501
+        ]
+      },
+      "properties": {
+        "candidate_id": "P015",
+        "zone_id": "peu_dense",
+        "support_type": "batiment",
+        "confidence": 0.0677631795406341,
+        "distance_anfr_m": 488.8772674848299,
+        "status": "plausible"
+      }
+    }
+  ]
+}

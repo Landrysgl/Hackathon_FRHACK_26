@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+
+# sorties locales et caches
+outputs/
+runs/
+data/cache_ign/
+*.cache
+
+# poids d'entraînement temporaires
+**/last.pt
