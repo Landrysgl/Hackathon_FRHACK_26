@@ -1,0 +1,9 @@
+pandas
+requests
+pillow
+tqdm
+boto3
+dash
+kaleido
+streamlit
+ultralytics
