@@ -1,0 +1,33 @@
+{
+  "initial_weights": "yolov8n.pt",
+  "epochs": 50,
+  "imgsz": 1024,
+  "batch": 8,
+  "patience": 15,
+  "seed": 42,
+  "degrees": 180.0,
+  "experiments": [
+    {
+      "type": "mono",
+      "run": "niveau2_compare_mono_r180",
+      "epochs_executed": 50,
+      "best_epoch": 37,
+      "precision": 0.9219,
+      "recall": 0.2,
+      "map50": 0.20053,
+      "map50_95": 0.04471,
+      "weights": "/home/onyxia/work/Hackathon_FRHACK_26/baseline_yolo/runs/niveau2_compare_mono_r180/weights/best.pt"
+    },
+    {
+      "type": "multi",
+      "run": "niveau2_compare_multi_r180",
+      "epochs_executed": 17,
+      "best_epoch": 2,
+      "precision": 0.00129,
+      "recall": 0.4,
+      "map50": 0.00174,
+      "map50_95": 0.00075,
+      "weights": "/home/onyxia/work/Hackathon_FRHACK_26/baseline_yolo/runs/niveau2_compare_multi_r180/weights/best.pt"
+    }
+  ]
+}

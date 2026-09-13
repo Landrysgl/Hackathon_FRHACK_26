@@ -18,3 +18,15 @@ baseline_yolo/runs/baseline_weak/args.yaml
 baseline_yolo/runs/baseline_weak/training_summary.json
 baseline_yolo/runs/baseline_weak/weights/last.pt
 baseline_yolo/runs/detect/
+.venv/
+runs/
+weights/
+yolov8n.pt
+baseline_yolo/data/cache_ign_tiles/
+baseline_yolo/data/images_ign_niveau1_corrige/
+baseline_yolo/data/manual_validation/images/
+baseline_yolo/data/niveau2_manual_train/images/
+baseline_yolo/data/niveau2_manual_train/audit_visuel/
+baseline_yolo/data/niveau2_error_analysis/
+baseline_yolo/data/dataset_niveau2_*/**/*.jpg
+baseline_yolo/runs/
