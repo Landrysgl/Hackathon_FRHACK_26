@@ -10,3 +10,11 @@ __pycache__/
 # Artefacts YOLO générés automatiquement
 baseline_yolo/runs/baseline_weak/val_batch*.jpg
 baseline_yolo/runs/detect/val-*/
+
+# Artefacts d'entraînement YOLO
+baseline_yolo/runs/baseline_weak/*.jpg
+baseline_yolo/runs/baseline_weak/*.png
+baseline_yolo/runs/baseline_weak/args.yaml
+baseline_yolo/runs/baseline_weak/training_summary.json
+baseline_yolo/runs/baseline_weak/weights/last.pt
+baseline_yolo/runs/detect/
