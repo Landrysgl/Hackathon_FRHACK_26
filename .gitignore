@@ -30,3 +30,4 @@ baseline_yolo/data/niveau2_manual_train/audit_visuel/
 baseline_yolo/data/niveau2_error_analysis/
 baseline_yolo/data/dataset_niveau2_*/**/*.jpg
 baseline_yolo/runs/
+baseline_yolo/data/manual_validation/evaluation_niveau2_*/yolo_dataset/
