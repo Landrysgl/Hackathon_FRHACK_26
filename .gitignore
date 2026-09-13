@@ -48,3 +48,9 @@ baseline_yolo/data/niveau2_manual_holdout_final/evaluation_finale_holdout/yolo_d
 
 # Ultralytics cache
 baseline_yolo/data/dataset_niveau2_renforce/labels/*.cache
+
+# Niveau 3 - images générées
+baseline_yolo/data/niveau3_pilote/images/
+baseline_yolo/data/niveau3_pilote/detections/images_annotees/
+baseline_yolo/data/niveau3_pilote/candidats/crops/
+baseline_yolo/data/niveau3_pilote/candidats/contextes/
