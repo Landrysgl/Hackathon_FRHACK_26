@@ -6,3 +6,7 @@ baseline_yolo/data/raw/anfr/SUP_EMETTEUR.txt
 # Python cache
 __pycache__/
 *.py[cod]
+
+# Artefacts YOLO générés automatiquement
+baseline_yolo/runs/baseline_weak/val_batch*.jpg
+baseline_yolo/runs/detect/val-*/
