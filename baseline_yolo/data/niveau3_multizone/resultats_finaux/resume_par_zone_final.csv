@@ -1,0 +1,4 @@
+zone_id,patches,supports_500m,supports_dans_emprise,detections_brutes,detections_ge150m,candidats_uniques,plausibles,faux_positifs,incertains,taux_plausibles_pct
+dense,25,16,17,141,29,22,21,1,0,95.45454545454545
+intermediaire,25,3,3,12,5,5,2,2,1,40.0
+peu_dense,25,1,1,21,19,19,4,14,1,21.05263157894737

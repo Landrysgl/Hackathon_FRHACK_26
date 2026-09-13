@@ -1,139 +1,165 @@
+from pathlib import Path
 import pandas as pd
+import numpy as np
 
-# ---------------------------------------------------------
-# 1. Chargement des données ANFR
-# ---------------------------------------------------------
+ROOT = Path(__file__).resolve().parent
+DATA_DIR = ROOT / "data"
 
-chemin_supports = "data/raw/anfr/SUP_SUPPORT.txt"
 
-supports = pd.read_csv(
-    chemin_supports, sep=";", dtype={"STA_NM_ANFR": str, "COM_CD_INSEE": str}
+def trouver_fichier(*chemins_possibles: Path) -> Path:
+    for chemin in chemins_possibles:
+        if chemin.exists():
+            return chemin
+    essais = "\n".join(f" - {p}" for p in chemins_possibles)
+    raise FileNotFoundError(f"Aucun fichier trouvé parmi :\n{essais}")
+
+
+def lire_csv_robuste(path: Path, **kwargs) -> pd.DataFrame:
+    derniere_erreur = None
+    for enc in ("utf-8-sig", "utf-8", "latin-1"):
+        try:
+            return pd.read_csv(path, encoding=enc, **kwargs)
+        except UnicodeDecodeError as exc:
+            derniere_erreur = exc
+    raise derniere_erreur
+
+
+SUPPORT_PATH = trouver_fichier(
+    DATA_DIR / "raw" / "anfr" / "SUP_SUPPORT.txt",
+    ROOT / "baseline_yolo" / "data" / "raw" / "anfr" / "SUP_SUPPORT.txt",
 )
 
-print("Nombre de supports :", len(supports))
+NATURE_PATH = trouver_fichier(
+    DATA_DIR / "raw" / "references" / "SUP_NATURE.txt",
+    DATA_DIR / "raw" / "ref_antennes" / "SUP_NATURE.txt",
+    DATA_DIR / "raw" / "ref_atennes" / "SUP_NATURE.txt",
+    ROOT / "baseline_yolo" / "data" / "raw" / "references" / "SUP_NATURE.txt",
+)
+
+print("===== FICHIERS UTILISES =====")
+print("SUP_SUPPORT :", SUPPORT_PATH)
+print("SUP_NATURE  :", NATURE_PATH)
+
+dtype_support = {
+    "SUP_ID": "string",
+    "STA_NM_ANFR": "string",
+    "COM_CD_INSEE": "string",
+    "ADR_NM_CP": "string",
+    "COR_CD_NS_LAT": "string",
+    "COR_CD_EW_LON": "string",
+}
+
+supports = lire_csv_robuste(
+    SUPPORT_PATH,
+    sep=";",
+    dtype=dtype_support,
+    low_memory=False,
+)
+
+colonnes_requises = [
+    "SUP_ID", "STA_NM_ANFR", "NAT_ID",
+    "COR_NB_DG_LAT", "COR_NB_MN_LAT", "COR_NB_SC_LAT", "COR_CD_NS_LAT",
+    "COR_NB_DG_LON", "COR_NB_MN_LON", "COR_NB_SC_LON", "COR_CD_EW_LON",
+]
+
+manquantes = [c for c in colonnes_requises if c not in supports.columns]
+if manquantes:
+    raise ValueError(f"Colonnes manquantes dans SUP_SUPPORT.txt : {manquantes}")
+
+print("\n===== DONNEES INITIALES =====")
+print("Nombre de lignes ANFR :", len(supports))
 print("Nombre de colonnes :", len(supports.columns))
-
-print("\nColonnes disponibles :")
-print(supports.columns.tolist())
-
-
-# ---------------------------------------------------------
-# 2. Conversion des coordonnées DMS vers degrés décimaux
-# ---------------------------------------------------------
-
-
-def convertir_dms(degres, minutes, secondes, direction):
-    """
-    Convertit une coordonnée en degrés/minutes/secondes
-    vers des degrés décimaux.
-    """
-
-    coordonnee = degres + minutes / 60 + secondes / 3600
-
-    if direction in ["S", "W"]:
-        coordonnee = -coordonnee
-
-    return coordonnee
-
-
-supports["latitude"] = supports.apply(
-    lambda ligne: convertir_dms(
-        ligne["COR_NB_DG_LAT"],
-        ligne["COR_NB_MN_LAT"],
-        ligne["COR_NB_SC_LAT"],
-        ligne["COR_CD_NS_LAT"],
-    ),
-    axis=1,
+print("Nombre de supports physiques uniques :", supports["SUP_ID"].nunique())
+print("Nombre de stations ANFR uniques :", supports["STA_NM_ANFR"].nunique())
+print(
+    "Nombre de lignes supplémentaires liées aux SUP_ID répétés :",
+    len(supports) - supports["SUP_ID"].nunique(),
 )
 
-supports["longitude"] = supports.apply(
-    lambda ligne: convertir_dms(
-        ligne["COR_NB_DG_LON"],
-        ligne["COR_NB_MN_LON"],
-        ligne["COR_NB_SC_LON"],
-        ligne["COR_CD_EW_LON"],
-    ),
-    axis=1,
-)
-
-
-# ---------------------------------------------------------
-# 3. Vérification des coordonnées obtenues
-# ---------------------------------------------------------
-
-colonnes_utiles = [
-    "SUP_ID",
-    "STA_NM_ANFR",
-    "NAT_ID",
-    "latitude",
-    "longitude",
-    "SUP_NM_HAUT",
-    "ADR_NM_CP",
-    "COM_CD_INSEE",
+dms_cols = [
+    "COR_NB_DG_LAT", "COR_NB_MN_LAT", "COR_NB_SC_LAT",
+    "COR_NB_DG_LON", "COR_NB_MN_LON", "COR_NB_SC_LON",
 ]
 
-print("\nPremiers supports :")
-print(supports[colonnes_utiles].head(10))
+for col in dms_cols:
+    supports[col] = pd.to_numeric(supports[col], errors="coerce")
+
+coord_incompletes = supports[dms_cols].isna().any(axis=1)
+print("Lignes avec coordonnées DMS incomplètes :", int(coord_incompletes.sum()))
+
+ns = supports["COR_CD_NS_LAT"].str.strip().str.upper()
+ew = supports["COR_CD_EW_LON"].str.strip().str.upper()
+
+directions_invalides = (~ns.isin(["N", "S"])) | (~ew.isin(["E", "W"]))
+print("Directions N/S/E/W invalides :", int(directions_invalides.sum()))
 
 
-# ---------------------------------------------------------
-# 4. Informations générales
-# ---------------------------------------------------------
+def dms_decimal(deg, minute, seconde, direction):
+    valeur = deg + minute / 60.0 + seconde / 3600.0
+    signe = np.where(direction.isin(["S", "W"]), -1.0, 1.0)
+    return valeur * signe
 
-print("\nNombre de stations ANFR différentes :")
-print(supports["STA_NM_ANFR"].nunique())
 
-print("\nNombre de types NAT_ID différents :")
-print(supports["NAT_ID"].nunique())
-
-print("\nTypes les plus fréquents :")
-print(supports["NAT_ID"].value_counts().head(20))
-
-# ---------------------------------------------------------
-# 5. Chargement de la table des natures de supports
-# ---------------------------------------------------------
-
-chemin_natures = "data/raw/references/SUP_NATURE.txt"
-
-natures = pd.read_csv(
-    chemin_natures, sep=";", header=None, names=["NAT_ID", "NATURE_SUPPORT"]
+supports["latitude"] = dms_decimal(
+    supports["COR_NB_DG_LAT"],
+    supports["COR_NB_MN_LAT"],
+    supports["COR_NB_SC_LAT"],
+    ns,
 )
-# Harmonisation du type de la clé NAT_ID
-natures["NAT_ID"] = pd.to_numeric(natures["NAT_ID"], errors="coerce")
 
-natures = natures.dropna(subset=["NAT_ID"])
-natures["NAT_ID"] = natures["NAT_ID"].astype("int64")
+supports["longitude"] = dms_decimal(
+    supports["COR_NB_DG_LON"],
+    supports["COR_NB_MN_LON"],
+    supports["COR_NB_SC_LON"],
+    ew,
+)
 
-print("\nTable des natures :")
-print(natures.head(10))
+coords_invalides = (
+    ~supports["latitude"].between(-90, 90)
+    | ~supports["longitude"].between(-180, 180)
+)
 
+print("Coordonnées décimales invalides :", int(coords_invalides.sum()))
 
-# ---------------------------------------------------------
-# 6. Association des supports avec leur nature
-# ---------------------------------------------------------
+natures = lire_csv_robuste(
+    NATURE_PATH,
+    sep=";",
+    low_memory=False,
+)
 
-supports = supports.merge(natures, on="NAT_ID", how="left")
+if not {"NAT_ID", "NAT_LB_NOM"}.issubset(natures.columns):
+    raise ValueError(
+        "SUP_NATURE.txt doit contenir les colonnes NAT_ID et NAT_LB_NOM. "
+        f"Colonnes trouvées : {list(natures.columns)}"
+    )
 
-print("\nSupports avec leur nature :")
+natures["NAT_ID"] = pd.to_numeric(natures["NAT_ID"], errors="raise")
 
-colonnes_resultat = [
-    "SUP_ID",
-    "STA_NM_ANFR",
-    "NAT_ID",
-    "NATURE_SUPPORT",
-    "latitude",
-    "longitude",
-    "SUP_NM_HAUT",
-    "COM_CD_INSEE",
-]
+if natures["NAT_ID"].duplicated().any():
+    raise ValueError("SUP_NATURE.txt contient des NAT_ID dupliqués.")
 
-print(supports[colonnes_resultat].head(20))
+supports["NAT_ID"] = pd.to_numeric(supports["NAT_ID"], errors="coerce")
 
+fusion = supports.merge(
+    natures[["NAT_ID", "NAT_LB_NOM"]],
+    on="NAT_ID",
+    how="left",
+    validate="many_to_one",
+)
 
-# ---------------------------------------------------------
-# 7. Répartition des principales natures de supports
-# ---------------------------------------------------------
+print("Natures manquantes après fusion :", int(fusion["NAT_LB_NOM"].isna().sum()))
 
-print("\nNatures de supports les plus fréquentes :")
+print("\n===== TYPES DE SUPPORT - LIGNES ANFR =====")
+print(fusion["NAT_LB_NOM"].value_counts().head(20))
 
-print(supports["NATURE_SUPPORT"].value_counts().head(20))
+supports_uniques = fusion.drop_duplicates("SUP_ID")
+
+print("\n===== TYPES DE SUPPORT - SUPPORTS PHYSIQUES UNIQUES =====")
+print(supports_uniques["NAT_LB_NOM"].value_counts().head(20))
+
+print("\n===== RESUME =====")
+print("Lignes ANFR :", len(fusion))
+print("Supports physiques uniques :", fusion["SUP_ID"].nunique())
+print("Stations ANFR uniques :", fusion["STA_NM_ANFR"].nunique())
+print("Coordonnées invalides :", int(coords_invalides.sum()))
+print("Natures non résolues :", int(fusion["NAT_LB_NOM"].isna().sum()))

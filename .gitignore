@@ -2,3 +2,62 @@ Jingwen/data/raw/anfr/SUP_EMETTEUR.txt
 Jingwen/data/raw/anfr/SUP_BANDE.txt
 baseline_yolo/data/raw/anfr/SUP_BANDE.txt
 baseline_yolo/data/raw/anfr/SUP_EMETTEUR.txt
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Artefacts YOLO générés automatiquement
+baseline_yolo/runs/baseline_weak/val_batch*.jpg
+baseline_yolo/runs/detect/val-*/
+
+# Artefacts d'entraînement YOLO
+baseline_yolo/runs/baseline_weak/*.jpg
+baseline_yolo/runs/baseline_weak/*.png
+baseline_yolo/runs/baseline_weak/args.yaml
+baseline_yolo/runs/baseline_weak/training_summary.json
+baseline_yolo/runs/baseline_weak/weights/last.pt
+baseline_yolo/runs/detect/
+.venv/
+runs/
+weights/
+yolov8n.pt
+baseline_yolo/data/cache_ign_tiles/
+baseline_yolo/data/images_ign_niveau1_corrige/
+baseline_yolo/data/manual_validation/images/
+baseline_yolo/data/niveau2_manual_train/images/
+baseline_yolo/data/niveau2_manual_train/audit_visuel/
+baseline_yolo/data/niveau2_error_analysis/
+baseline_yolo/data/dataset_niveau2_*/**/*.jpg
+baseline_yolo/runs/
+baseline_yolo/data/manual_validation/evaluation_niveau2_*/yolo_dataset/
+
+# VS Code / Onyxia local
+.vscode/
+
+# Niveau 2 - images d'annotation générées localement
+baseline_yolo/data/niveau2_manual_train_lot2/images/
+baseline_yolo/data/niveau2_manual_val/images/
+baseline_yolo/data/niveau2_manual_holdout_final/images/
+
+# Niveau 2 - images du dataset YOLO reconstruites
+baseline_yolo/data/dataset_niveau2_renforce/images/
+
+# Jeux YOLO temporaires d'évaluation
+baseline_yolo/data/niveau2_manual_holdout_final/evaluation_finale_holdout/yolo_dataset/
+
+# Ultralytics cache
+baseline_yolo/data/dataset_niveau2_renforce/labels/*.cache
+
+# Niveau 3 - images générées
+baseline_yolo/data/niveau3_pilote/images/
+baseline_yolo/data/niveau3_pilote/detections/images_annotees/
+baseline_yolo/data/niveau3_pilote/candidats/crops/
+baseline_yolo/data/niveau3_pilote/candidats/contextes/
+
+# Niveau 3 multizone - données lourdes/reconstructibles
+baseline_yolo/data/niveau3_multizone/zones/*/images/
+baseline_yolo/data/niveau3_multizone/candidats/revue/crops/
+baseline_yolo/data/niveau3_multizone/candidats/revue/contextes/
+baseline_yolo/data/niveau3_multizone/audit_avant_dedup/contextes/
+baseline_yolo/data/cache_ign_tiles/
