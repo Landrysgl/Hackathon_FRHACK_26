@@ -61,3 +61,6 @@ baseline_yolo/data/niveau3_multizone/candidats/revue/crops/
 baseline_yolo/data/niveau3_multizone/candidats/revue/contextes/
 baseline_yolo/data/niveau3_multizone/audit_avant_dedup/contextes/
 baseline_yolo/data/cache_ign_tiles/
+
+# Ancien espace de développement - remplacé par code/
+baseline_yolo/
