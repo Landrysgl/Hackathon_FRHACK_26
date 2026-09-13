@@ -1,0 +1,12 @@
+{
+  "experiment": "niveau2_humain",
+  "initial_weights": "historical/baseline_yolo/yolov8n.pt",
+  "dataset": "historical/baseline_yolo/data/dataset_niveau2_humain/dataset.yaml",
+  "epochs_max": 50,
+  "imgsz": 1024,
+  "batch": 8,
+  "patience": 15,
+  "seed": 42,
+  "device": "0",
+  "best_weights": "historical/baseline_yolo/runs/niveau2_humain/weights/best.pt"
+}

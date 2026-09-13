@@ -1,0 +1,21 @@
+ign:
+  wmts_url: "https://data.geopf.fr/wmts"
+  layer: "ORTHOIMAGERY.ORTHOPHOTOS"
+  tile_matrix_set: "PM"
+  style: "normal"
+  image_format: "image/jpeg"
+  zoom: 19
+  tile_size: 256
+  patch_size: 1024
+  grid_size: 5
+  jpeg_quality: 95
+  request_timeout_s: 30
+  request_retries: 3
+  request_delay_s: 0.03
+
+detection:
+  imgsz: 1024
+  confidence: 0.05
+  nms_iou: 0.50
+  min_anfr_distance_m: 150.0
+  dedup_distance_m: 30.0

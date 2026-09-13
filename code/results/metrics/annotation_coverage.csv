@@ -1,0 +1,6 @@
+split,total,visible,non_visible,ambigu,usable
+level1_manual_test,20,10,3,7,13
+level2_train_batch1,80,51,10,19,61
+level2_train_batch2,130,93,11,26,104
+level2_validation,45,31,4,10,35
+level2_holdout_final,25,21,2,2,23

@@ -1,0 +1,4 @@
+rang_final,unique_candidate_id,zone_id,support_type,review_status,confidence,nearest_ANFR_distance_m,latitude,longitude,nearest_SUP_ID,nearest_ANFR_nature,cartoradio_url
+1,D003,dense,mat,plausible,0.4892931282520294,155.61820539284508,48.80130595727149,2.1259929297036706,835052,Immeuble,https://www.cartoradio.fr/#/cartographie/lonlat/2.125993/48.801306
+2,D006,dense,batiment,plausible,0.3996590375900268,162.2627252584222,48.79944540032697,2.130660266357154,2284920,Bâtiment,https://www.cartoradio.fr/#/cartographie/lonlat/2.130660/48.799445
+3,D007,dense,batiment,plausible,0.3208507001399994,250.7318529428723,48.79434290064165,2.130313756515534,794061,Château d'eau - réservoir,https://www.cartoradio.fr/#/cartographie/lonlat/2.130314/48.794343

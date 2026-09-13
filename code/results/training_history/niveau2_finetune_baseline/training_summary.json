@@ -1,0 +1,11 @@
+{
+  "experiment": "niveau2_finetune_baseline",
+  "initial_weights": "historical/baseline_yolo/runs/baseline_weak/weights/best.pt",
+  "dataset": "historical/baseline_yolo/data/dataset_niveau2_humain/dataset.yaml",
+  "epochs_max": 50,
+  "imgsz": 1024,
+  "batch": 8,
+  "patience": 15,
+  "seed": 42,
+  "best_weights": "historical/baseline_yolo/runs/niveau2_finetune_baseline/weights/best.pt"
+}

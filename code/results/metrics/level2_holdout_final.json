@@ -1,0 +1,19 @@
+{
+  "weights": "models/pyl_poil_final_yolov8n.pt",
+  "manual_images_total": 25,
+  "manual_images_used": 23,
+  "visible": 21,
+  "non_visible": 2,
+  "ambigu_excluded": 2,
+  "conf_threshold_for_tp_fp_fn": 0.05,
+  "match_iou_threshold": 0.5,
+  "TP": 13,
+  "FP": 111,
+  "FN": 8,
+  "precision": 0.10483870967741936,
+  "recall": 0.6190476190476191,
+  "map50_manual": 0.2494986163552126,
+  "map50_95_manual": 0.11381873274058876,
+  "ultralytics_precision_manual": 0.3312734484793748,
+  "ultralytics_recall_manual": 0.42857142857142855
+}

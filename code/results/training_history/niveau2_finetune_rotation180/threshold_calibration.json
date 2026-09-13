@@ -1,0 +1,125 @@
+{
+  "model": "historical/baseline_yolo/runs/niveau2_finetune_rotation180/weights/best.pt",
+  "validation_images": 12,
+  "iou_match": 0.5,
+  "best_threshold": 0.03,
+  "best_metrics": {
+    "threshold": 0.03,
+    "TP": 1,
+    "FP": 105,
+    "FN": 9,
+    "precision": 0.009433962264150943,
+    "recall": 0.1,
+    "f1": 0.017241379310344827
+  },
+  "all_thresholds": [
+    {
+      "threshold": 0.001,
+      "TP": 1,
+      "FP": 3599,
+      "FN": 9,
+      "precision": 0.0002777777777777778,
+      "recall": 0.1,
+      "f1": 0.0005540166204986149
+    },
+    {
+      "threshold": 0.002,
+      "TP": 1,
+      "FP": 3568,
+      "FN": 9,
+      "precision": 0.0002801905295601009,
+      "recall": 0.1,
+      "f1": 0.0005588153115395362
+    },
+    {
+      "threshold": 0.005,
+      "TP": 1,
+      "FP": 3050,
+      "FN": 9,
+      "precision": 0.00032776138970829236,
+      "recall": 0.1,
+      "f1": 0.0006533812479581836
+    },
+    {
+      "threshold": 0.01,
+      "TP": 1,
+      "FP": 2359,
+      "FN": 9,
+      "precision": 0.000423728813559322,
+      "recall": 0.1,
+      "f1": 0.0008438818565400844
+    },
+    {
+      "threshold": 0.02,
+      "TP": 1,
+      "FP": 816,
+      "FN": 9,
+      "precision": 0.0012239902080783353,
+      "recall": 0.1,
+      "f1": 0.0024183796856106408
+    },
+    {
+      "threshold": 0.03,
+      "TP": 1,
+      "FP": 105,
+      "FN": 9,
+      "precision": 0.009433962264150943,
+      "recall": 0.1,
+      "f1": 0.017241379310344827
+    },
+    {
+      "threshold": 0.05,
+      "TP": 0,
+      "FP": 0,
+      "FN": 10,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.075,
+      "TP": 0,
+      "FP": 0,
+      "FN": 10,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.1,
+      "TP": 0,
+      "FP": 0,
+      "FN": 10,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.15,
+      "TP": 0,
+      "FP": 0,
+      "FN": 10,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.2,
+      "TP": 0,
+      "FP": 0,
+      "FN": 10,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.3,
+      "TP": 0,
+      "FP": 0,
+      "FN": 10,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  ]
+}

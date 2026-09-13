@@ -1,7 +1,0 @@
-path: /home/onyxia/work/Hackathon_FRHACK_26/data/dataset_yolo_manuel
-train: images/train
-val: images/val
-test: images/test
-
-names:
-  0: support_radio

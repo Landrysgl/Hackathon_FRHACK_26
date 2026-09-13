@@ -1,8 +1,0 @@
-path: /home/onyxia/work/Hackathon_FRHACK_26/baseline_yolo/data/dataset_niveau2_multiclasse
-train: images/train
-val: images/val
-names:
-  0: batiment
-  1: pylone_mat
-  2: chateau_eau
-  3: autre_support

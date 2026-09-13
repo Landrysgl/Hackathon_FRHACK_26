@@ -1,0 +1,11 @@
+run,best_epoch_by_map50,best_logged_val_map50,map50_95_at_that_epoch,precision_at_that_epoch,recall_at_that_epoch
+baseline_weak,44,0.08802,0.04369,0.00564,1.0
+niveau2_compare_mono_r180,35,0.23581,0.04435,0.88755,0.2
+niveau2_compare_multi_r180,7,0.00392,0.00068,0.00085,0.3
+niveau2_finetune_baseline,3,0.09735,0.00988,0.0009,0.2
+niveau2_finetune_hardneg,2,0.04991,0.00502,0.00093,0.2
+niveau2_finetune_rotation180,2,0.02375,0.00239,0.00046,0.1
+niveau2_humain,2,0.00501,0.00158,0.00139,0.5
+niveau2_renforce_coco_rotation180,20,0.17151,0.0655,0.69014,0.16129
+niveau2_renforce_coco_sans_rotation,47,0.23682,0.11674,0.2399,0.48387
+niveau2_renforce_rotation180,32,0.11868,0.03811,0.4305,0.12903
