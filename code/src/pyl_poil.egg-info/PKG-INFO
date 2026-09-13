@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: pyl-poil
+Version: 1.0.0
+Summary: Détection de supports radioélectriques sur orthophotos IGN - FrHack! 2026 Challenge 4
+Requires-Python: >=3.10
+Requires-Dist: numpy>=1.24
+Requires-Dist: pandas>=2.0
+Requires-Dist: requests>=2.31
+Requires-Dist: Pillow>=10.0
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: folium>=0.15
+Requires-Dist: matplotlib>=3.8
+Requires-Dist: torch>=2.0
+Requires-Dist: ultralytics<9,>=8.2
