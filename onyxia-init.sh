@@ -15,7 +15,9 @@ python -m pip install --user \
     tqdm \
     boto3 \
     dash \
-    kaleido
+    kaleido \
+    streamlit \
+    ultralytics
 
 echo "===== VERIFICATION ====="
 python -c "import boto3; print('boto3 OK')"
