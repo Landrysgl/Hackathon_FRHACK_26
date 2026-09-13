@@ -54,3 +54,10 @@ baseline_yolo/data/niveau3_pilote/images/
 baseline_yolo/data/niveau3_pilote/detections/images_annotees/
 baseline_yolo/data/niveau3_pilote/candidats/crops/
 baseline_yolo/data/niveau3_pilote/candidats/contextes/
+
+# Niveau 3 multizone - données lourdes/reconstructibles
+baseline_yolo/data/niveau3_multizone/zones/*/images/
+baseline_yolo/data/niveau3_multizone/candidats/revue/crops/
+baseline_yolo/data/niveau3_multizone/candidats/revue/contextes/
+baseline_yolo/data/niveau3_multizone/audit_avant_dedup/contextes/
+baseline_yolo/data/cache_ign_tiles/
