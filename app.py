@@ -20,7 +20,7 @@ except ImportError:
 # ============================================================
 
 st.set_page_config(
-    page_title="ANFR Vision",
+    page_title="PYL-POIL",
     page_icon="📡",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -408,8 +408,8 @@ except Exception as e:
 # ============================================================
 
 with st.sidebar:
-    st.title("📡 ANFR Vision")
-    st.caption("FRHACK! 2026 — Challenge 4")
+    st.title("📡 PYL-POIL")
+    st.caption("FRHACK 2026")
     st.divider()
 
     page = st.radio(
@@ -488,10 +488,10 @@ with st.sidebar:
 # HEADER
 # ============================================================
 
-st.title("📡 ANFR Vision")
+st.title("📡 PYL-POIL")
 st.caption(
     "Détection et qualification de structures radioélectriques "
-    "sur images aériennes — FRHACK! 2026"
+    "sur images aériennes — FRHACK 2026"
 )
 
 
