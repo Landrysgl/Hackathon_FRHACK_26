@@ -2,6 +2,7 @@ import json
 import math
 from pathlib import Path
 import re
+import sys
 
 import pandas as pd
 import plotly.express as px
@@ -27,14 +28,83 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Si le fichier est lancé avec ``python app.py`` au lieu de Streamlit, on
+# affiche une instruction claire dans le terminal. Le script reste robuste et
+# ne tombe plus sur un NameError si le référentiel n'est pas trouvé.
+try:
+    from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+    if get_script_run_ctx(suppress_warning=True) is None:
+        print(
+            "[PYL-POIL] Cette interface doit être lancée avec :\n"
+            f'  "{sys.executable}" -m streamlit run "{Path(__file__).resolve()}"\n'
+        )
+except Exception:
+    pass
+
 APP_DIR = Path(__file__).resolve().parent
 
-# The repository is normally launched from its root. Keep a small fallback
-# list so the app also works if the reference CSV is moved into code/data.
+
+def _candidate_project_roots():
+    """Retourne les emplacements plausibles de la racine du projet.
+
+    L'application est normalement placée à la racine du dépôt. On accepte
+    également un lancement depuis un sous-dossier ou depuis le répertoire de
+    travail courant afin d'éviter de dépendre d'un chemin absolu.
+    """
+    roots = [APP_DIR, Path.cwd().resolve()]
+    for base in (APP_DIR, Path.cwd().resolve()):
+        roots.extend(base.parents)
+    return list(dict.fromkeys(roots))
+
+
+def find_project_root():
+    """Détecte la racine contenant le dossier ``code/`` de Pyl-Poil."""
+    for root in _candidate_project_roots():
+        if (root / "code" / "models").exists() or (
+            root / "code" / "data" / "reference"
+        ).exists():
+            return root
+    return APP_DIR
+
+
+PROJECT_ROOT = find_project_root()
+
+# --------------------------------------------------------------------
+# Références du projet Pyl-Poil
+# --------------------------------------------------------------------
+# L'application sait lire :
+#   1) le gros export ANFR historique, s'il est présent à la racine ;
+#   2) le référentiel propre livré avec Pyl-Poil (Yvelines).
 ANFR_CSV_CANDIDATES = [
+    PROJECT_ROOT / "SUP_SUPPORT_AVEC_TYPE.csv",
+    PROJECT_ROOT / "code" / "data" / "reference" / "supports_yvelines.csv",
     APP_DIR / "SUP_SUPPORT_AVEC_TYPE.csv",
     APP_DIR / "code" / "data" / "reference" / "supports_yvelines.csv",
 ]
+
+# Le modèle final doit être privilégié explicitement. Cela évite de charger
+# accidentellement un ancien best.pt ou la baseline faible du Niveau 1.
+PREFERRED_MODEL_CANDIDATES = [
+    PROJECT_ROOT / "code" / "models" / "pyl_poil_final_yolov8n.pt",
+    PROJECT_ROOT / "models" / "pyl_poil_final_yolov8n.pt",
+    APP_DIR / "code" / "models" / "pyl_poil_final_yolov8n.pt",
+    APP_DIR / "models" / "pyl_poil_final_yolov8n.pt",
+]
+
+# Paramètres validés pour le modèle final Pyl-Poil.
+RECOMMENDED_CONFIDENCE = 0.05
+RECOMMENDED_IMGSZ = 1024
+RECOMMENDED_IOU = 0.50
+
+# Pour une image centrée sur un site ANFR connu, le rayon de proximité local
+# est volontairement plus large que dans la première version de l'interface.
+# La calibration humaine du projet montre que le décalage ANFR -> objet visible
+# peut atteindre plusieurs dizaines de mètres. Ce rayon LOCAL ne doit pas être
+# confondu avec le filtre Niveau 3 de 150 m appliqué aux scans géoréférencés.
+DEFAULT_MATCH_RADIUS_METERS = 50.0
+DEFAULT_IMAGE_SIZE_METERS = 100.0
+
 
 def resolve_existing_path(candidates):
     for path in candidates:
@@ -42,13 +112,8 @@ def resolve_existing_path(candidates):
             return path
     return candidates[0]
 
-ANFR_CSV = resolve_existing_path(ANFR_CSV_CANDIDATES)
 
-# Le script 3_creation_DB_ORTHO_images.py du repo génère des images
-# centrées sur le support ANFR, en 512x512 px, avec une emprise 100x100 m.
-IMAGE_PIXELS = 512
-IMAGE_SIZE_METERS = 100.0
-DEFAULT_MATCH_RADIUS_METERS = 20.0
+ANFR_CSV = resolve_existing_path(ANFR_CSV_CANDIDATES)
 
 
 # ============================================================
@@ -121,79 +186,162 @@ def dms_to_decimal(degrees, minutes, seconds, direction):
 
 
 def find_model_files():
-    """Cherche automatiquement les poids YOLO présents dans le repo."""
+    """Retourne les poids disponibles en privilégiant le modèle final."""
     candidates = []
 
-    for pattern in ("*.pt", "*.onnx"):
-        candidates.extend(APP_DIR.rglob(pattern))
+    # Le modèle officiel est toujours proposé en premier s'il existe.
+    for path in PREFERRED_MODEL_CANDIDATES:
+        if path.exists():
+            candidates.append(path)
 
-    # On évite les doublons et on privilégie les best.pt.
+    # On ne parcourt pas récursivement tout le dépôt : un environnement .venv
+    # CUDA peut contenir plusieurs gigaoctets et ralentir fortement le démarrage.
+    search_roots = [
+        PROJECT_ROOT / "code" / "models",
+        PROJECT_ROOT / "models",
+        PROJECT_ROOT / "runs",
+        PROJECT_ROOT / "code" / "runs",
+        APP_DIR / "code" / "models",
+        APP_DIR / "models",
+    ]
+
+    for root in search_roots:
+        if not root.exists():
+            continue
+        for pattern in ("*.pt", "*.onnx"):
+            candidates.extend(root.rglob(pattern))
+
     candidates = list(dict.fromkeys(candidates))
-    candidates.sort(
-        key=lambda p: (
-            0 if p.name.lower() == "best.pt" else 1,
-            len(p.parts),
-            str(p),
-        )
-    )
+
+    def priority(path):
+        name = path.name.lower()
+        full = str(path).lower()
+        if name == "pyl_poil_final_yolov8n.pt":
+            rank = 0
+        elif "pyl_poil_final" in name:
+            rank = 1
+        elif name == "best.pt":
+            rank = 2
+        elif "level1" in full or "weak" in full:
+            rank = 4
+        else:
+            rank = 3
+        return (rank, len(path.parts), str(path))
+
+    candidates.sort(key=priority)
     return candidates
 
 
-@st.cache_data
+def _read_csv_robust(path):
+    """Lit un CSV virgule ou point-virgule sans imposer le format historique."""
+    # sep=None + moteur Python détecte correctement les deux variantes livrées.
+    try:
+        return pd.read_csv(
+            path,
+            sep=None,
+            engine="python",
+            dtype=str,
+        )
+    except Exception:
+        # Fallback explicite utile pour certains exports ANFR volumineux.
+        for sep in (";", ","):
+            try:
+                df = pd.read_csv(path, sep=sep, dtype=str, low_memory=False)
+                if len(df.columns) > 1:
+                    return df
+            except Exception:
+                pass
+        raise
+
+
+def _numeric_series(series):
+    """Convertit une série numérique en tolérant la virgule décimale."""
+    return pd.to_numeric(
+        series.astype(str).str.replace(",", ".", regex=False),
+        errors="coerce",
+    )
+
+
+@st.cache_data(show_spinner=False)
 def load_data():
-    """Charge le référentiel ANFR et calcule les coordonnées décimales."""
+    """Charge le référentiel ANFR, brut ou prétraité par Pyl-Poil."""
     if not ANFR_CSV.exists():
+        searched = "\n".join(f"- {p}" for p in ANFR_CSV_CANDIDATES)
         raise FileNotFoundError(
-            f"Le fichier {ANFR_CSV.name} est introuvable."
+            "Aucun référentiel ANFR n'a été trouvé. Chemins testés :\n"
+            + searched
         )
 
-    df = pd.read_csv(
-        ANFR_CSV,
-        sep=";",
-        dtype=str,
-        low_memory=False,
+    df = _read_csv_robust(ANFR_CSV)
+    df.columns = [str(c).strip() for c in df.columns]
+
+    # Format propre Pyl-Poil : latitude / longitude déjà en décimal.
+    if {"latitude", "longitude"}.issubset(df.columns):
+        df["latitude"] = _numeric_series(df["latitude"])
+        df["longitude"] = _numeric_series(df["longitude"])
+    else:
+        # Format ANFR historique : coordonnées DMS.
+        required = [
+            "COR_NB_DG_LAT",
+            "COR_NB_MN_LAT",
+            "COR_NB_SC_LAT",
+            "COR_CD_NS_LAT",
+            "COR_NB_DG_LON",
+            "COR_NB_MN_LON",
+            "COR_NB_SC_LON",
+            "COR_CD_EW_LON",
+        ]
+        missing = [c for c in required if c not in df.columns]
+        if missing:
+            raise ValueError(
+                "Le référentiel ne contient ni latitude/longitude décimales "
+                "ni toutes les colonnes DMS ANFR. Colonnes manquantes : "
+                + ", ".join(missing)
+            )
+
+        lat_deg = _numeric_series(df["COR_NB_DG_LAT"])
+        lat_min = _numeric_series(df["COR_NB_MN_LAT"])
+        lat_sec = _numeric_series(df["COR_NB_SC_LAT"])
+        lon_deg = _numeric_series(df["COR_NB_DG_LON"])
+        lon_min = _numeric_series(df["COR_NB_MN_LON"])
+        lon_sec = _numeric_series(df["COR_NB_SC_LON"])
+
+        lat = lat_deg + lat_min / 60.0 + lat_sec / 3600.0
+        lon = lon_deg + lon_min / 60.0 + lon_sec / 3600.0
+
+        lat_dir = df["COR_CD_NS_LAT"].astype(str).str.upper().str.strip()
+        lon_dir = df["COR_CD_EW_LON"].astype(str).str.upper().str.strip()
+        df["latitude"] = lat.where(~lat_dir.isin(["S"]), -lat)
+        df["longitude"] = lon.where(~lon_dir.isin(["W"]), -lon)
+
+    # Harmonisation du nom de la nature du support entre les deux sources.
+    if "TYPE" not in df.columns:
+        if "NAT_LB_NOM" in df.columns:
+            df["TYPE"] = df["NAT_LB_NOM"]
+        else:
+            df["TYPE"] = "Non renseigné"
+
+    # Colonnes utilisées par l'interface : on les crée si besoin afin de ne pas
+    # faire planter la cartographie avec le référentiel compact Pyl-Poil.
+    for col in [
+        "SUP_ID",
+        "STA_NM_ANFR",
+        "SUP_NM_HAUT",
+        "ADR_LB_LIEU",
+        "ADR_NM_CP",
+        "COM_CD_INSEE",
+    ]:
+        if col not in df.columns:
+            df[col] = pd.NA
+
+    # SUP_ID doit rester textuel pour faire correspondre proprement les noms
+    # d'images du type ANFR_105408.jpg ou 105408.jpg.
+    df["SUP_ID"] = (
+        df["SUP_ID"]
+        .astype(str)
+        .str.replace(r"\.0$", "", regex=True)
+        .str.strip()
     )
-
-    required = [
-        "COR_NB_DG_LAT",
-        "COR_NB_MN_LAT",
-        "COR_NB_SC_LAT",
-        "COR_CD_NS_LAT",
-        "COR_NB_DG_LON",
-        "COR_NB_MN_LON",
-        "COR_NB_SC_LON",
-        "COR_CD_EW_LON",
-    ]
-
-    missing = [c for c in required if c not in df.columns]
-    if missing:
-        raise ValueError(
-            "Colonnes de coordonnées manquantes : "
-            + ", ".join(missing)
-        )
-
-    df["latitude"] = df.apply(
-        lambda row: dms_to_decimal(
-            row["COR_NB_DG_LAT"],
-            row["COR_NB_MN_LAT"],
-            row["COR_NB_SC_LAT"],
-            row["COR_CD_NS_LAT"],
-        ),
-        axis=1,
-    )
-
-    df["longitude"] = df.apply(
-        lambda row: dms_to_decimal(
-            row["COR_NB_DG_LON"],
-            row["COR_NB_MN_LON"],
-            row["COR_NB_SC_LON"],
-            row["COR_CD_EW_LON"],
-        ),
-        axis=1,
-    )
-
-    df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce")
-    df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce")
 
     return df
 
@@ -210,18 +358,24 @@ def load_yolo_model(weights_path):
     return YOLO(weights_path)
 
 
-def image_geometry(image):
-    """Retourne la géométrie métrique de l'image.
+def image_geometry(image, image_size_meters=DEFAULT_IMAGE_SIZE_METERS):
+    """Retourne la géométrie métrique supposée d'une image centrée ANFR.
 
-    Les patches du projet couvrent 100 m x 100 m. On conserve donc cette
-    emprise, mais on utilise la taille réelle de l'image afin d'éviter un
-    décalage lorsque l'utilisateur charge une image qui n'est pas 512x512.
+    ``image_size_meters`` est la largeur/hauteur au sol de l'orthophoto. La
+    valeur par défaut (100 m) correspond au générateur historique de l'app.
+    Pour une image quelconque sans géoréférencement, cette conversion ne doit
+    pas être interprétée comme une distance ANFR fiable.
     """
     width, height = image.size
-    return width, height, IMAGE_SIZE_METERS / width, IMAGE_SIZE_METERS / height
+    return (
+        width,
+        height,
+        float(image_size_meters) / width,
+        float(image_size_meters) / height,
+    )
 
 
-def extract_detections(result, image=None):
+def extract_detections(result, image=None, image_size_meters=DEFAULT_IMAGE_SIZE_METERS):
     """Transforme un résultat Ultralytics en DataFrame exploitable."""
     detections = []
 
@@ -263,10 +417,12 @@ def extract_detections(result, image=None):
         # Les patches du projet sont centrés sur le support ANFR et couvrent
         # 100 m x 100 m. Utiliser la taille réelle évite de supposer 512x512.
         if image is not None:
-            width, height, px_to_m_x, px_to_m_y = image_geometry(image)
+            width, height, px_to_m_x, px_to_m_y = image_geometry(image, image_size_meters)
         else:
-            width = height = IMAGE_PIXELS
-            px_to_m_x = px_to_m_y = IMAGE_SIZE_METERS / IMAGE_PIXELS
+            width = height = RECOMMENDED_IMGSZ
+            px_to_m_x = px_to_m_y = (
+                float(image_size_meters) / RECOMMENDED_IMGSZ
+            )
 
         dx_m = (cx - width / 2) * px_to_m_x
         dy_m = (cy - height / 2) * px_to_m_y
@@ -286,40 +442,54 @@ def extract_detections(result, image=None):
             }
         )
 
-    return pd.DataFrame(detections)
+    columns = [
+        "classe", "confiance", "x1", "y1", "x2", "y2",
+        "centre_x", "centre_y", "distance_centre_m",
+    ]
+    return pd.DataFrame(detections, columns=columns)
 
 
-def annotate_image(image, result, match_radius_m):
+def annotate_image(
+    image,
+    result,
+    match_radius_m,
+    image_size_meters=DEFAULT_IMAGE_SIZE_METERS,
+    draw_reference=True,
+):
     """Dessine les détections YOLO et le point de référence ANFR au centre."""
     annotated = image.copy()
     draw = ImageDraw.Draw(annotated)
 
-    # Centre = position théorique du support ANFR dans les images produites
-    # par le pipeline du repo.
-    width, height, px_to_m_x, px_to_m_y = image_geometry(image)
+    # Le centre ne représente une position ANFR que si l'image est bien une
+    # orthophoto centrée sur le support de référence.
+    width, height, px_to_m_x, px_to_m_y = image_geometry(
+        image, image_size_meters
+    )
     center = (width / 2, height / 2)
-    radius_px_x = match_radius_m / px_to_m_x
-    radius_px_y = match_radius_m / px_to_m_y
 
-    draw.ellipse(
-        (
-            center[0] - radius_px_x,
-            center[1] - radius_px_y,
-            center[0] + radius_px_x,
-            center[1] + radius_px_y,
-        ),
-        outline=(255, 180, 0),
-        width=3,
-    )
-    draw.ellipse(
-        (
-            center[0] - 5,
-            center[1] - 5,
-            center[0] + 5,
-            center[1] + 5,
-        ),
-        fill=(255, 180, 0),
-    )
+    if draw_reference:
+        radius_px_x = match_radius_m / px_to_m_x
+        radius_px_y = match_radius_m / px_to_m_y
+
+        draw.ellipse(
+            (
+                center[0] - radius_px_x,
+                center[1] - radius_px_y,
+                center[0] + radius_px_x,
+                center[1] + radius_px_y,
+            ),
+            outline=(255, 180, 0),
+            width=3,
+        )
+        draw.ellipse(
+            (
+                center[0] - 5,
+                center[1] - 5,
+                center[0] + 5,
+                center[1] + 5,
+            ),
+            fill=(255, 180, 0),
+        )
 
     if result.boxes is not None:
         names = result.names if hasattr(result, "names") else {}
@@ -346,8 +516,14 @@ def annotate_image(image, result, match_radius_m):
                 (cy - height / 2) * px_to_m_y,
             )
 
-            is_match = distance_m <= match_radius_m
-            outline = (0, 220, 120) if is_match else (255, 90, 70)
+            if draw_reference:
+                is_match = distance_m <= match_radius_m
+                outline = (0, 220, 120) if is_match else (255, 90, 70)
+            else:
+                # Sans référence géographique fiable, on ne code pas les
+                # boîtes en vert/rouge : ce serait suggérer à tort une
+                # correspondance ou une anomalie ANFR.
+                outline = (40, 170, 255)
 
             draw.rectangle((x1, y1, x2, y2), outline=outline, width=4)
 
@@ -420,10 +596,14 @@ def compare_detections_to_reference(detections, reference, radius_m):
     return result
 
 
-def make_json_download(detections):
+def make_json_download(
+    detections,
+    image=None,
+    image_size_meters=DEFAULT_IMAGE_SIZE_METERS,
+):
     payload = {
-        "image_size_meters": IMAGE_SIZE_METERS,
-        "image_pixels": IMAGE_PIXELS,
+        "image_size_meters": float(image_size_meters),
+        "image_pixels": list(image.size) if image is not None else None,
         "detections": detections.to_dict(orient="records"),
     }
     return json.dumps(
@@ -437,15 +617,35 @@ def make_json_download(detections):
 # CHARGEMENT DES DONNÉES
 # ============================================================
 
+REFERENCE_COLUMNS = [
+    "SUP_ID",
+    "STA_NM_ANFR",
+    "TYPE",
+    "SUP_NM_HAUT",
+    "ADR_LB_LIEU",
+    "ADR_NM_CP",
+    "COM_CD_INSEE",
+    "latitude",
+    "longitude",
+]
+
+
+def empty_reference_dataframe():
+    """DataFrame vide mais compatible avec toutes les pages de l'interface."""
+    frame = pd.DataFrame(columns=REFERENCE_COLUMNS)
+    frame["latitude"] = pd.Series(dtype="float64")
+    frame["longitude"] = pd.Series(dtype="float64")
+    return frame
+
+
+DATA_LOAD_ERROR = None
 try:
     df = load_data()
 except Exception as e:
-    st.error(f"❌ Erreur lors du chargement des données ANFR : {e}")
-    st.info(
-        "Vérifiez que `SUP_SUPPORT_AVEC_TYPE.csv` est bien à la racine "
-        "du dépôt et que le fichier est séparé par `;`."
-    )
-    st.stop()
+    # Ne jamais laisser ``df`` indéfini. C'était la cause du NameError observé
+    # lorsqu'un utilisateur lançait app.py sans le référentiel à proximité.
+    DATA_LOAD_ERROR = str(e)
+    df = empty_reference_dataframe()
 
 
 # ============================================================
@@ -474,58 +674,112 @@ with st.sidebar:
     model_files = find_model_files()
 
     if model_files:
-        model_options = [str(p.relative_to(APP_DIR)) for p in model_files]
-        default_index = 0
+        # Les chemins affichés restent lisibles même si app.py n'est pas
+        # exactement à la racine du dépôt.
+        model_options = []
+        model_lookup = {}
+        for path in model_files:
+            try:
+                label = str(path.relative_to(PROJECT_ROOT))
+            except ValueError:
+                label = str(path)
+            model_options.append(label)
+            model_lookup[label] = path
 
         selected_model = st.selectbox(
             "Poids du modèle",
             model_options,
-            index=default_index,
+            index=0,
             help=(
-                "Le repo est parcouru automatiquement à la recherche "
-                "de fichiers .pt/.onnx. Un best.pt est privilégié."
+                "Pyl-Poil privilégie explicitement le checkpoint final "
+                "code/models/pyl_poil_final_yolov8n.pt lorsqu'il est présent."
             ),
         )
-        weights_path = APP_DIR / selected_model
+        weights_path = model_lookup[selected_model]
     else:
         weights_input = st.text_input(
             "Chemin vers les poids (.pt)",
-            value="runs/detect/antennes/weights/best.pt",
+            value="code/models/pyl_poil_final_yolov8n.pt",
         )
         weights_path = Path(weights_input)
         if not weights_path.is_absolute():
             weights_path = APP_DIR / weights_path
 
+    is_final_model = weights_path.name == "pyl_poil_final_yolov8n.pt"
+    if is_final_model:
+        st.success("✓ Modèle final Pyl-Poil sélectionné")
+    else:
+        st.warning(
+            "Vous n'utilisez pas le checkpoint final Pyl-Poil. Les résultats "
+            "peuvent différer des métriques du rapport."
+        )
+
+    st.caption(
+        "Paramètres validés : confiance 0,05 · image 1024 px · IoU NMS 0,50"
+    )
+
     conf_threshold = st.slider(
         "Seuil de confiance",
-        0.05,
+        0.01,
         0.95,
-        0.25,
-        0.05,
+        RECOMMENDED_CONFIDENCE,
+        0.01,
+        help=(
+            "Le modèle final a été évalué à conf=0,05. Monter ce seuil peut "
+            "faire disparaître de nombreux petits supports aériens."
+        ),
     )
 
     imgsz = st.select_slider(
         "Résolution YOLO",
-        options=[640, 768, 960, 1280],
-        value=1280,
+        options=[640, 768, 960, 1024, 1280],
+        value=RECOMMENDED_IMGSZ,
+        help="Le modèle final Pyl-Poil a été validé à imgsz=1024.",
     )
 
+    nms_iou = st.slider(
+        "IoU NMS",
+        0.10,
+        0.90,
+        RECOMMENDED_IOU,
+        0.05,
+        help="Valeur validée dans le pipeline final : 0,50.",
+    )
+
+    st.markdown("##### Correspondance locale ANFR")
     match_radius = st.slider(
-        "Rayon de correspondance ANFR (m)",
-        5.0,
-        50.0,
+        "Rayon de proximité (m)",
+        10.0,
+        150.0,
         DEFAULT_MATCH_RADIUS_METERS,
         5.0,
         help=(
-            "Dans le dataset généré par le repo, le support ANFR "
-            "est au centre d'une image de 100 m x 100 m."
+            "Rayon local pour une image centrée sur un site ANFR connu. "
+            "Ce paramètre n'est PAS le filtre candidat Niveau 3 de 150 m."
+        ),
+    )
+
+    image_size_meters = st.number_input(
+        "Emprise supposée de l'image (m × m)",
+        min_value=20.0,
+        max_value=1000.0,
+        value=DEFAULT_IMAGE_SIZE_METERS,
+        step=10.0,
+        help=(
+            "Utilisé uniquement pour convertir la distance en pixels vers "
+            "des mètres lors de la comparaison locale. Le générateur "
+            "historique de l'application produit des crops de 100 × 100 m."
         ),
     )
 
     st.divider()
     st.caption(
-        "⚠️ Une détection sans correspondance ANFR est un candidat "
-        "à examiner, pas la preuve d'un site non déclaré."
+        "⚠️ Une détection sans correspondance ANFR est un élément à examiner, "
+        "pas la preuve d'un site non déclaré."
+    )
+    st.caption(
+        "Niveau 3 officiel : distance au support ANFR le plus proche >= 150 m, "
+        "puis déduplication à 30 m et revue humaine."
     )
 
 
@@ -538,6 +792,21 @@ st.caption(
     "Détection et qualification de structures radioélectriques "
     "sur images aériennes — FRHACK 2026"
 )
+if DATA_LOAD_ERROR:
+    st.warning(
+        "Référentiel ANFR non chargé. La détection IA reste utilisable, mais "
+        "la cartographie et la comparaison ANFR seront limitées."
+    )
+    st.caption(
+        "Placez `SUP_SUPPORT_AVEC_TYPE.csv` à la racine du dépôt ou conservez "
+        "`code/data/reference/supports_yvelines.csv` dans l'arborescence Pyl-Poil."
+    )
+    with st.expander("Détail du chargement ANFR"):
+        st.code(DATA_LOAD_ERROR)
+else:
+    st.caption(
+        f"Référentiel chargé : `{ANFR_CSV}` · {len(df):,} supports".replace(",", " ")
+    )
 
 
 # ============================================================
@@ -763,10 +1032,26 @@ elif page == "🤖 Détection IA":
             else:
                 st.info(
                     "Le nom du fichier ne correspond pas à un SUP_ID "
-                    "du référentiel ANFR. Renommez l'image avec le "
-                    "SUP_ID correspondant si elle provient du dataset "
-                    "généré par le repo."
+                    "du référentiel ANFR. La détection YOLO reste disponible, "
+                    "mais la comparaison métrique au support ANFR sera désactivée."
                 )
+
+        spatial_reference_valid = False
+        if reference is not None:
+            spatial_reference_valid = st.checkbox(
+                "Cette image est bien centrée sur le support ANFR indiqué",
+                value=True,
+                help=(
+                    "Cochez uniquement si l'image provient du générateur de "
+                    "crops ANFR ou si vous savez que le support est placé au "
+                    "centre. Pour une image quelconque, décochez cette option."
+                ),
+            )
+        else:
+            st.caption(
+                "ℹ️ Sans géoréférencement fiable, Pyl-Poil affiche les boîtes "
+                "YOLO mais ne conclut pas à une correspondance ANFR."
+            )
 
         if st.button(
             "🚀 Lancer la détection",
@@ -797,21 +1082,33 @@ elif page == "🤖 Détection IA":
                         source=image,
                         conf=conf_threshold,
                         imgsz=imgsz,
+                        iou=nms_iou,
                         verbose=False,
                     )
 
                 result = results[0]
-                detections = extract_detections(result, image=image)
+                detections = extract_detections(
+                    result,
+                    image=image,
+                    image_size_meters=image_size_meters,
+                )
 
                 st.session_state["last_image_name"] = uploaded_file.name
                 st.session_state["last_detections"] = detections
                 st.session_state["last_reference"] = reference
                 st.session_state["last_result"] = result
+                st.session_state["last_spatial_reference_valid"] = (
+                    spatial_reference_valid
+                )
+                st.session_state["last_match_radius"] = match_radius
+                st.session_state["last_image_size_meters"] = image_size_meters
 
                 annotated = annotate_image(
                     image,
                     result,
                     match_radius,
+                    image_size_meters=image_size_meters,
+                    draw_reference=spatial_reference_valid,
                 )
 
                 st.divider()
@@ -836,35 +1133,35 @@ elif page == "🤖 Détection IA":
                     )
 
                 with c3:
-                    matches = (
-                        int(
+                    if spatial_reference_valid and not detections.empty:
+                        matches = int(
                             (
                                 detections["distance_centre_m"]
                                 <= match_radius
                             ).sum()
                         )
-                        if not detections.empty
-                        else 0
-                    )
-                    st.metric(
-                        "Proches du support ANFR",
-                        matches,
-                    )
+                        st.metric("Proches du support ANFR", matches)
+                    elif spatial_reference_valid:
+                        st.metric("Proches du support ANFR", 0)
+                    else:
+                        st.metric("Proches du support ANFR", "—")
 
                 st.image(
                     annotated,
                     caption=(
-                        "Vert = détection dans le rayon de "
-                        "correspondance ANFR ; rouge = candidate éloignée. "
-                        "Jaune = position théorique du support ANFR."
+                        "Vert = détection dans le rayon local ; rouge = "
+                        "détection hors rayon. Jaune = position ANFR théorique "
+                        "uniquement lorsque l'image est déclarée centrée."
                     ),
                     use_container_width=True,
                 )
 
                 if detections.empty:
                     st.warning(
-                        "Aucune structure détectée au-dessus du seuil "
-                        "de confiance."
+                        "Aucune structure détectée au-dessus du seuil de "
+                        "confiance. Vérifiez d'abord que le modèle final est "
+                        "sélectionné et utilisez les paramètres recommandés "
+                        "conf=0,05, imgsz=1024, IoU=0,50."
                     )
                 else:
                     st.dataframe(
@@ -875,7 +1172,11 @@ elif page == "🤖 Détection IA":
 
                     st.download_button(
                         "⬇️ Télécharger les détections JSON",
-                        data=make_json_download(detections),
+                        data=make_json_download(
+                            detections,
+                            image=image,
+                            image_size_meters=image_size_meters,
+                        ),
                         file_name=(
                             f"{Path(uploaded_file.name).stem}"
                             "_detections.json"
@@ -898,13 +1199,20 @@ elif page == "🔎 Comparaison IA / ANFR":
     st.header("🔎 Comparaison IA / ANFR")
 
     st.write(
-        "La comparaison exploite le fait que les images générées "
-        "par le pipeline du repo sont centrées sur le support ANFR."
+        "La comparaison locale n'est activée que pour une image déclarée "
+        "centrée sur un support ANFR. Elle ne remplace pas le pipeline "
+        "géoréférencé de recherche de candidats du Niveau 3."
     )
 
     detections = st.session_state.get("last_detections")
     reference = st.session_state.get("last_reference")
     image_name = st.session_state.get("last_image_name")
+    spatial_reference_valid = st.session_state.get(
+        "last_spatial_reference_valid", False
+    )
+    comparison_radius = st.session_state.get(
+        "last_match_radius", match_radius
+    )
 
     if detections is None:
         st.info(
@@ -912,10 +1220,18 @@ elif page == "🔎 Comparaison IA / ANFR":
             "**🤖 Détection IA**."
         )
     else:
+        if not spatial_reference_valid:
+            st.warning(
+                "La dernière image n'a pas été déclarée comme centrée sur une "
+                "référence ANFR fiable. La comparaison spatiale est donc "
+                "désactivée afin d'éviter une conclusion trompeuse."
+            )
+            st.stop()
+
         comparison = compare_detections_to_reference(
             detections,
             reference,
-            match_radius,
+            comparison_radius,
         )
 
         total = len(detections)
@@ -924,7 +1240,7 @@ elif page == "🔎 Comparaison IA / ANFR":
             if "correspondance" in comparison.columns
             else 0
         )
-        anomalies = total - matched
+        outside_local_radius = total - matched
 
         col1, col2, col3 = st.columns(3)
 
@@ -935,7 +1251,7 @@ elif page == "🔎 Comparaison IA / ANFR":
             st.metric("Correspondances", matched)
 
         with col3:
-            st.metric("Candidates / anomalies", anomalies)
+            st.metric("Hors rayon local", outside_local_radius)
 
         if reference is not None:
             st.success(
@@ -969,19 +1285,20 @@ elif page == "🔎 Comparaison IA / ANFR":
                     "proche de la position ANFR attendue."
                 )
 
-            if anomalies > 0:
+            if outside_local_radius > 0:
                 st.warning(
-                    "🟠 Certaines détections sont éloignées du support "
-                    "ANFR attendu. Elles constituent des candidats à "
-                    "examiner, pas des preuves de sites non déclarés."
+                    "🟠 Certaines détections sont hors du rayon local autour "
+                    "du support connu. Cela ne suffit pas à en faire des "
+                    "candidats Niveau 3."
                 )
 
         st.info(
-            "⚠️ Cette comparaison est une qualification de candidat. "
-            "Une absence de correspondance peut venir d'un faux positif, "
-            "d'un décalage géographique, d'une différence de date, "
-            "d'une installation récente/démontée ou d'une erreur "
-            "de classification."
+            "⚠️ Cette page réalise une comparaison LOCALE sur une image "
+            "centrée ANFR. Le Niveau 3 officiel de Pyl-Poil recherche les "
+            "candidats sur des scans géoréférencés puis applique une distance "
+            "au support ANFR le plus proche >= 150 m et une déduplication à "
+            "30 m. Une détection isolée reste un candidat à examiner, jamais "
+            "la preuve automatique d'un site non déclaré."
         )
 
 
@@ -999,18 +1316,22 @@ elif page == "📏 Évaluation":
         "dépôt sont affichées comme référence."
     )
 
-    data_root = APP_DIR / "data"
+    data_root = PROJECT_ROOT / "data"
     yaml_candidates = [
         data_root / "antennes.yaml",
         data_root / "data.yaml",
-        APP_DIR / "antennes.yaml",
-        APP_DIR / "data.yaml",
-        APP_DIR / "code" / "data" / "antennes.yaml",
-        APP_DIR / "code" / "data" / "data.yaml",
+        PROJECT_ROOT / "antennes.yaml",
+        PROJECT_ROOT / "data.yaml",
+        PROJECT_ROOT / "code" / "data" / "antennes.yaml",
+        PROJECT_ROOT / "code" / "data" / "data.yaml",
+        APP_DIR / "data" / "antennes.yaml",
+        APP_DIR / "data" / "data.yaml",
     ]
 
     yaml_path = next((p for p in yaml_candidates if p.exists()), None)
     holdout_candidates = [
+        PROJECT_ROOT / "code" / "results" / "metrics" / "level2_holdout_final.json",
+        PROJECT_ROOT / "results" / "metrics" / "level2_holdout_final.json",
         APP_DIR / "code" / "results" / "metrics" / "level2_holdout_final.json",
         APP_DIR / "results" / "metrics" / "level2_holdout_final.json",
     ]

@@ -380,7 +380,7 @@ Les réglages recommandés pour le modèle final sont :
 | Rayon local de proximité ANFR | **50 m** |
 | Emprise supposée pour une image locale centrée | **100 m × 100 m** |
 
-![Paramètres du modèle Pyl-Poil](images_readme/image_10.png)
+![Paramètres du modèle Pyl-Poil](images_readme/image_10.jpeg)
 
 Le seuil de confiance de **0,05** est volontairement faible : il privilégie le rappel et permet de faire remonter davantage de structures potentielles. En contrepartie, des faux positifs peuvent apparaître et doivent ensuite être filtrés et interprétés.
 
