@@ -46,8 +46,9 @@ Les chiffres consolidés sont dans `code/results/metrics/`, les illustrations da
 ![](images_readme/image_4.png)
 
  6. Une fois à l'intérieur du service, clonez le dépôt git puis exécutez dans le dossier "Hackathon_FRHACK_26" les commandes suivantes :
- python -m pip uninstall -y opencv-python
- python -m pip install opencv-python-headless
+pip install ultralytics
+python -m pip install --user --ignore-installed --no-cache-dir opencv-python-headless
+python -c "import sys; print('\n'.join(sys.path))"
  python -m streamlit run app.py
 
  7. Retournez dans votre menu principal, allez dans l'onglet "Mes services", cliquez sur le bouton "ouvrir" figurant au niveau de votre service et cliquez sur les mots "ce lien" parlant du port 8501 et affichés en couleur
