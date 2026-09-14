@@ -171,8 +171,6 @@ Cliquez sur *"Choisir une image"* puis sélectionnez une image au format :
 
 L'image doit correspondre à une image aérienne pouvant être analysée par le modèle.
 
-<!-- IMAGE À AJOUTER : Capture d'écran de la zone permettant d'importer une image -->
-
 ![Import d'une image](images_readme/image_8.png)
 
 #### Étape 2 — Sélectionner les paramètres
@@ -200,7 +198,6 @@ Le rayon de correspondance permet de déterminer si une détection est suffisamm
 
 La valeur par défaut est de *20 mètres*.
 
-<!-- IMAGE À AJOUTER : Capture de la barre latérale montrant les paramètres de détection -->
 
 ![Paramètres de détection](images_readme/image_9.png)
 
@@ -221,7 +218,6 @@ Pour chaque détection, l'application affiche notamment :
 
 Les détections sont ensuite affichées directement sur l'image.
 
-<!-- IMAGE À AJOUTER : Capture d'une image avec les boîtes de détection du modèle -->
 
 ![Résultat de la détection IA](images_readme/image_10.png)
 
@@ -252,8 +248,6 @@ L'application présente notamment :
 - le nombre d'anomalies détectées.
 
 Un tableau permet également de consulter le détail des correspondances.
-
-<!-- IMAGE À AJOUTER : Capture d'écran de la page "Comparaison IA / ANFR" -->
 
 ![Comparaison IA et ANFR](images_readme/image_11.png)
 
@@ -290,7 +284,6 @@ Les principales métriques affichées sont :
 - *Precision* : proportion des détections effectuées par le modèle qui sont correctes ;
 - *Recall* : proportion des objets réellement présents qui sont correctement détectés.
 
-<!-- IMAGE À AJOUTER : Capture d'écran de la page "Évaluation" avec les métriques affichées -->
 
 ![Évaluation du modèle](images_readme/image_12.png)
 
@@ -311,11 +304,12 @@ Elle présente notamment :
 
 Des graphiques permettent de visualiser rapidement la distribution des différents types de supports.
 
-<!-- IMAGE À AJOUTER : Capture d'écran du Dashboard avec les indicateurs et graphiques -->
 
-![Dashboard](images_readme/image_13.png)
+![Répartition par type](images_readme/image_13.png)
 
----
+![Dashboard](images_readme/image_14.png)
+
+
 
 ## Paramètres disponibles
 

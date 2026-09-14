@@ -1,6 +1,7 @@
 import json
 import math
 from pathlib import Path
+import re
 
 import pandas as pd
 import plotly.express as px
@@ -27,7 +28,21 @@ st.set_page_config(
 )
 
 APP_DIR = Path(__file__).resolve().parent
-ANFR_CSV = APP_DIR / "SUP_SUPPORT_AVEC_TYPE.csv"
+
+# The repository is normally launched from its root. Keep a small fallback
+# list so the app also works if the reference CSV is moved into code/data.
+ANFR_CSV_CANDIDATES = [
+    APP_DIR / "SUP_SUPPORT_AVEC_TYPE.csv",
+    APP_DIR / "code" / "data" / "reference" / "supports_yvelines.csv",
+]
+
+def resolve_existing_path(candidates):
+    for path in candidates:
+        if path.exists():
+            return path
+    return candidates[0]
+
+ANFR_CSV = resolve_existing_path(ANFR_CSV_CANDIDATES)
 
 # Le script 3_creation_DB_ORTHO_images.py du repo génère des images
 # centrées sur le support ANFR, en 512x512 px, avec une emprise 100x100 m.
@@ -195,7 +210,18 @@ def load_yolo_model(weights_path):
     return YOLO(weights_path)
 
 
-def extract_detections(result):
+def image_geometry(image):
+    """Retourne la géométrie métrique de l'image.
+
+    Les patches du projet couvrent 100 m x 100 m. On conserve donc cette
+    emprise, mais on utilise la taille réelle de l'image afin d'éviter un
+    décalage lorsque l'utilisateur charge une image qui n'est pas 512x512.
+    """
+    width, height = image.size
+    return width, height, IMAGE_SIZE_METERS / width, IMAGE_SIZE_METERS / height
+
+
+def extract_detections(result, image=None):
     """Transforme un résultat Ultralytics en DataFrame exploitable."""
     detections = []
 
@@ -234,11 +260,16 @@ def extract_detections(result):
         cx = (x1 + x2) / 2
         cy = (y1 + y2) / 2
 
-        # Dans le dataset du repo, l'image est centrée sur le support ANFR.
-        # On convertit donc l'écart pixel -> mètres.
-        pixel_to_meter = IMAGE_SIZE_METERS / IMAGE_PIXELS
-        dx_m = (cx - IMAGE_PIXELS / 2) * pixel_to_meter
-        dy_m = (cy - IMAGE_PIXELS / 2) * pixel_to_meter
+        # Les patches du projet sont centrés sur le support ANFR et couvrent
+        # 100 m x 100 m. Utiliser la taille réelle évite de supposer 512x512.
+        if image is not None:
+            width, height, px_to_m_x, px_to_m_y = image_geometry(image)
+        else:
+            width = height = IMAGE_PIXELS
+            px_to_m_x = px_to_m_y = IMAGE_SIZE_METERS / IMAGE_PIXELS
+
+        dx_m = (cx - width / 2) * px_to_m_x
+        dy_m = (cy - height / 2) * px_to_m_y
         distance_m = math.sqrt(dx_m**2 + dy_m**2)
 
         detections.append(
@@ -263,17 +294,19 @@ def annotate_image(image, result, match_radius_m):
     annotated = image.copy()
     draw = ImageDraw.Draw(annotated)
 
-    # Centre = position théorique du support ANFR dans les images
-    # produites par le pipeline du repo.
-    center = (IMAGE_PIXELS / 2, IMAGE_PIXELS / 2)
-    radius_px = match_radius_m * IMAGE_PIXELS / IMAGE_SIZE_METERS
+    # Centre = position théorique du support ANFR dans les images produites
+    # par le pipeline du repo.
+    width, height, px_to_m_x, px_to_m_y = image_geometry(image)
+    center = (width / 2, height / 2)
+    radius_px_x = match_radius_m / px_to_m_x
+    radius_px_y = match_radius_m / px_to_m_y
 
     draw.ellipse(
         (
-            center[0] - radius_px,
-            center[1] - radius_px,
-            center[0] + radius_px,
-            center[1] + radius_px,
+            center[0] - radius_px_x,
+            center[1] - radius_px_y,
+            center[0] + radius_px_x,
+            center[1] + radius_px_y,
         ),
         outline=(255, 180, 0),
         width=3,
@@ -308,10 +341,9 @@ def annotate_image(image, result, match_radius_m):
             cx = (x1 + x2) / 2
             cy = (y1 + y2) / 2
 
-            pixel_to_meter = IMAGE_SIZE_METERS / IMAGE_PIXELS
             distance_m = math.hypot(
-                (cx - IMAGE_PIXELS / 2) * pixel_to_meter,
-                (cy - IMAGE_PIXELS / 2) * pixel_to_meter,
+                (cx - width / 2) * px_to_m_x,
+                (cy - height / 2) * px_to_m_y,
             )
 
             is_match = distance_m <= match_radius_m
@@ -344,7 +376,16 @@ def reference_for_image(df, filename):
     if "SUP_ID" not in df.columns:
         return None
 
-    match = df[df["SUP_ID"].astype(str).str.strip() == stem]
+    ids = df["SUP_ID"].astype(str).str.strip()
+    match = df[ids == stem]
+
+    # Also accept names such as "SUP_ID_12345" or "12345_xxx".
+    if match.empty:
+        candidates = re.findall(r"\d+", stem)
+        for candidate in candidates:
+            match = df[ids == candidate]
+            if not match.empty:
+                break
 
     if match.empty:
         return None
@@ -400,6 +441,10 @@ try:
     df = load_data()
 except Exception as e:
     st.error(f"❌ Erreur lors du chargement des données ANFR : {e}")
+    st.info(
+        "Vérifiez que `SUP_SUPPORT_AVEC_TYPE.csv` est bien à la racine "
+        "du dépôt et que le fichier est séparé par `;`."
+    )
     st.stop()
 
 
@@ -566,8 +611,8 @@ if page == "🗺️ Cartographie":
             "ne correspond aux filtres."
         )
     else:
-        fig = px.scatter_map(
-            map_df,
+        map_kwargs = dict(
+            data_frame=map_df,
             lat="latitude",
             lon="longitude",
             color="TYPE",
@@ -585,8 +630,15 @@ if page == "🗺️ Cartographie":
             },
             zoom=5,
             height=650,
-            map_style="open-street-map",
         )
+
+        if hasattr(px, "scatter_map"):
+            fig = px.scatter_map(**map_kwargs, map_style="open-street-map")
+        else:
+            fig = px.scatter_mapbox(
+                **map_kwargs,
+                mapbox_style="open-street-map",
+            )
 
         fig.update_layout(
             margin=dict(l=0, r=0, t=0, b=0),
@@ -749,7 +801,7 @@ elif page == "🤖 Détection IA":
                     )
 
                 result = results[0]
-                detections = extract_detections(result)
+                detections = extract_detections(result, image=image)
 
                 st.session_state["last_image_name"] = uploaded_file.name
                 st.session_state["last_detections"] = detections
@@ -942,8 +994,9 @@ elif page == "📏 Évaluation":
     st.header("📏 Évaluation du modèle")
 
     st.write(
-        "Évaluation sur le jeu de validation YOLO du projet. "
-        "Le challenge demande notamment précision, rappel et mAP@50."
+        "Évaluation du modèle YOLO. Si le dataset YOLO complet n'est pas "
+        "présent localement, les métriques du holdout final livré dans le "
+        "dépôt sont affichées comme référence."
     )
 
     data_root = APP_DIR / "data"
@@ -952,34 +1005,21 @@ elif page == "📏 Évaluation":
         data_root / "data.yaml",
         APP_DIR / "antennes.yaml",
         APP_DIR / "data.yaml",
+        APP_DIR / "code" / "data" / "antennes.yaml",
+        APP_DIR / "code" / "data" / "data.yaml",
     ]
 
-    yaml_path = next(
-        (p for p in yaml_candidates if p.exists()),
-        None,
-    )
+    yaml_path = next((p for p in yaml_candidates if p.exists()), None)
+    holdout_candidates = [
+        APP_DIR / "code" / "results" / "metrics" / "level2_holdout_final.json",
+        APP_DIR / "results" / "metrics" / "level2_holdout_final.json",
+    ]
+    holdout_path = next((p for p in holdout_candidates if p.exists()), None)
 
-    if yaml_path is None:
-        st.warning(
-            "Aucun fichier `antennes.yaml` / `data.yaml` trouvé. "
-            "Ajoutez le dataset YOLO du challenge pour activer "
-            "l'évaluation."
-        )
-    elif YOLO is None:
-        st.warning(
-            "Installez `ultralytics` pour lancer l'évaluation."
-        )
-    elif not weights_path.exists():
-        st.warning(
-            f"Poids introuvables : `{weights_path}`"
-        )
-    else:
-        st.code(str(yaml_path), language="text")
+    if yaml_path is not None and YOLO is not None and weights_path.exists():
+        st.success(f"Dataset YOLO trouvé : `{yaml_path}`")
 
-        if st.button(
-            "📊 Évaluer le modèle",
-            type="primary",
-        ):
+        if st.button("📊 Évaluer le modèle", type="primary"):
             try:
                 with st.spinner("Évaluation en cours..."):
                     model = load_yolo_model(str(weights_path))
@@ -990,44 +1030,90 @@ elif page == "📏 Évaluation":
                     )
 
                 box_metrics = metrics.box
-
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
-                    st.metric(
-                        "mAP@50",
-                        f"{box_metrics.map50:.3f}",
-                    )
-
+                    st.metric("mAP@50", f"{box_metrics.map50:.3f}")
                 with col2:
-                    st.metric(
-                        "mAP@50-95",
-                        f"{box_metrics.map:.3f}",
-                    )
-
+                    st.metric("mAP@50-95", f"{box_metrics.map:.3f}")
                 with col3:
-                    st.metric(
-                        "Précision",
-                        f"{box_metrics.mp:.3f}",
-                    )
-
+                    st.metric("Précision", f"{box_metrics.mp:.3f}")
                 with col4:
-                    st.metric(
-                        "Rappel",
-                        f"{box_metrics.mr:.3f}",
-                    )
+                    st.metric("Rappel", f"{box_metrics.mr:.3f}")
 
                 st.success(
-                    "Évaluation terminée. Pour le livrable final, "
-                    "conservez également un jeu de validation "
-                    "annoté manuellement, distinct du train."
+                    "Évaluation terminée. Conservez également un jeu de "
+                    "validation manuel indépendant pour le livrable final."
                 )
-
             except Exception as e:
-                st.error(
-                    f"❌ Impossible d'évaluer le modèle : {e}"
+                st.error(f"❌ Impossible d'évaluer le modèle : {e}")
+
+    elif holdout_path is not None:
+        try:
+            holdout = json.loads(holdout_path.read_text(encoding="utf-8"))
+
+            st.info(
+                "Le dataset YOLO annoté complet n'est pas versionné dans le "
+                "dépôt. Voici les métriques du holdout final déjà calculées "
+                "et livrées avec le projet."
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("mAP@50", f"{holdout.get('map50_manual', 0):.3f}")
+            with col2:
+                st.metric(
+                    "mAP@50-95",
+                    f"{holdout.get('map50_95_manual', 0):.3f}",
+                )
+            with col3:
+                st.metric(
+                    "Précision",
+                    f"{holdout.get('ultralytics_precision_manual', 0):.3f}",
+                )
+            with col4:
+                st.metric(
+                    "Rappel",
+                    f"{holdout.get('ultralytics_recall_manual', 0):.3f}",
                 )
 
+            st.subheader("Détails du holdout final")
+            st.dataframe(
+                pd.DataFrame(
+                    [
+                        ("Images manuelles", holdout.get("manual_images_total")),
+                        ("Images utilisables", holdout.get("manual_images_used")),
+                        ("Visibles", holdout.get("visible")),
+                        ("Non visibles", holdout.get("non_visible")),
+                        ("Ambiguës exclues", holdout.get("ambigu_excluded")),
+                        ("TP", holdout.get("TP")),
+                        ("FP", holdout.get("FP")),
+                        ("FN", holdout.get("FN")),
+                        ("Seuil de confiance", holdout.get("conf_threshold_for_tp_fp_fn")),
+                        ("IoU de correspondance", holdout.get("match_iou_threshold")),
+                    ],
+                    columns=["Mesure", "Valeur"],
+                ),
+                hide_index=True,
+                use_container_width=True,
+            )
+
+            st.caption(f"Source locale : `{holdout_path}`")
+        except Exception as e:
+            st.error(f"❌ Impossible de lire les métriques livrées : {e}")
+
+    elif YOLO is None:
+        st.warning(
+            "Ultralytics n'est pas installé et aucune métrique locale "
+            "n'a été trouvée."
+        )
+    elif not weights_path.exists():
+        st.warning(f"Poids introuvables : `{weights_path}`")
+    else:
+        st.warning(
+            "Aucun `data.yaml` / `antennes.yaml` n'est présent et aucun "
+            "fichier de métriques holdout n'a été trouvé."
+        )
 
 # ============================================================
 # PAGE : DASHBOARD
